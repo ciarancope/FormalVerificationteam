@@ -128,27 +128,22 @@ ghost predicate isEvenSet(s: seq<int>) {
 }
 
 method checkEvenSet(s: seq<int>) returns (b: bool)
-  ensures b <==> isSet(s)
+  requires isSet(s) 
   ensures b <==> isEvenSet(s)
 { 
-  b := true; 
+  b := true; // Initialise at the start
   var i := 0;
-  var counter := 0; // Counter to determine if any elements are not even (iff)
-  while i < |s|
+  while i < |s| 
       invariant 0 <= i <= |s|
+      decreases |s| - i
+      invariant b ==> (forall v :: 0 <= v < i ==> (s[v] % 2 == 0))
     {
       if s[i] % 2 != 0 {
-        counter := counter + 1;
+        b := false; 
       } 
       i := i + 1;
     }
     assert i == |s|;
-
-  if counter > 0 {
-    b := true; 
-  } else {
-    b := false; 
-  }
 }
 
 /* An odd set is a set where all elements are odd */
@@ -158,17 +153,19 @@ ghost predicate isOddSet(s: seq<int>) {
 }
 
 method checkOddSet(s: seq<int>) returns (b: bool)
+  requires isSet(s)
   ensures b <==> isSet(s)
   ensures b <==> isOddSet(s)
 { 
-  b := true; 
+  b := true; // Initialise at the start
   var i := 0;
-  var counter := 0; // Counter to determine if any elements are not odd (iff)
-  while i < |s|
+  while i < |s| 
       invariant 0 <= i <= |s|
+      decreases |s| - i
+      invariant b ==> (forall v :: 0 <= v < i ==> (s[v] % 2 != 0))
     {
-      if s[i] % 2 == 0 { // If even elements exist, increase the counter 
-        counter := counter + 1;
+      if s[i] % 2 == 0 {
+        b := false; 
       } 
       i := i + 1;
     }
@@ -233,15 +230,39 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-{ // TODO: Implement the method
-  t := s1 + s2;
+requires isSet(s1)
+requires isSet(s2) 
+ensures isSet(t)
+{ 
+  var i := 0;
+  t := []; // Empty set if no overlap
+  while i < |s1| 
+    invariant 0 <= i <= |s1|
+    invariant isSet(t)
+  {
+    var j := 0; 
+    while j < |s2| 
+      invariant isSet(t)
+      invariant 0 <= j <= |s2|
+      {
+        if s1[i] == s2[j] {
+          t := addToSet(t, s1[i]);
+       }
+       j := j + 1;
+      }
+    i := i + 1; 
+  }
 }
 
 /* Difference of two sets s1 and s2, returning a new set t = s1 - s2 */
 method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
+  requires isSet(s1)
+  requires isSet(s2) 
+  ensures isSet(t)
 { // TODO: Implement the method
+  t := s1 - s2;
 }
 
 /* Multiplies each element of a set s by n, returning a new set t */
@@ -249,6 +270,7 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
 { // TODO: Implement the method
+
 }
 
 /* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
