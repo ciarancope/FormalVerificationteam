@@ -91,42 +91,44 @@ lemma InvertParityCorrect(n: int)
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
  // TODO: complete this predicate
+  forall i, j :: 0 <= i < |s| &&  0 <= j < |s| && i != j ==> s[i] != s[j] 
 }
 
 // hint don't use return statements. Set b instead.
 method checkSet(s: seq<int>) returns (b: bool)
   ensures b <==> isSet(s)
 { 
-b := true; 
+b := true;                    // Assume to be true at the beginning 
 var i := 0;                   // Outer while loop 
-var counter := 0;             // Counter to determine if any duplicates exist 
-while i < |s|                 // While loop to sort through set 
+while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
     invariant 0 <= i <= |s|  // Invariant to confirm that i never exceeds the range
-  {
-  var j := i + 1;
-  while j < |s| 
+    decreases |s| - i
+    invariant b ==> (forall u, v :: 0 <= u < i && 0 <= v < i && u != v ==> s[u] != s[v])
+    invariant b ==> (forall u, v :: 0 <= u < i && i <= v < |s| ==> s[u] != s[v])
     {
-     if s[i] == s[j] {
-        counter := counter + 1;
+    var j := i + 1;
+    while j < |s| && b       // Stop if j reaches the end or duplicate found
+      invariant 0 <= j <= |s|
+      decreases |s| - j
+      invariant b ==> (forall v :: i < v < j ==> s[i] != s[v])
+      {
+       if s[i] == s[j] {
+          b := false; 
+        }
+        j := j + 1;
       }
-      j := j + 1;
+    i := i + 1;
     }
-  i := i + 1;
-  }
-  // Check if any duplicates existed 
-  if counter > 0 {
-    b := false;
-  } else {
-    b := true;
-  }
 }
 
 /* An even set is a set where all elements are even */
 ghost predicate isEvenSet(s: seq<int>) {
  // TODO: complete this predicate
+  forall i :: 0 <= i < |s| ==> s[i] % 2 == 0
 }
 
 method checkEvenSet(s: seq<int>) returns (b: bool)
+  ensures b <==> isSet(s)
   ensures b <==> isEvenSet(s)
 { 
   b := true; 
@@ -152,9 +154,11 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
 /* An odd set is a set where all elements are odd */
 ghost predicate isOddSet(s: seq<int>) {
   // TODO: complete this predicate
+  forall i :: 0 <= i < |s| ==> s[i] % 2 != 0
 }
 
 method checkOddSet(s: seq<int>) returns (b: bool)
+  ensures b <==> isSet(s)
   ensures b <==> isOddSet(s)
 { 
   b := true; 
@@ -169,12 +173,6 @@ method checkOddSet(s: seq<int>) returns (b: bool)
       i := i + 1;
     }
     assert i == |s|;
-
-  if counter > 0 {
-    b := true; 
-  } else {
-    b := false; 
-  }
 }
 
 /*** Set Operations ***/
@@ -188,14 +186,47 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
   // Marks will be awarded for specifying as much as possible all relevant properties of the output.
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
+  requires isSet(s)
+  requires n !in s       // Ensures that n is not already in s 
+  ensures |b| >= |s|     // Ensures that b is greater than s
+  ensures b[..|s|] == s // Ensures that the prefix of b is s 
+  ensures isSet(b)
 { // TODO: Implement the method
+    b := s + [n];
 }
 
 /* Unions two sets s1 and s2, returning a new set t */
 method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-{ // TODO: Implement the method
+  requires isSet(s1) 
+  requires isSet(s2)
+  ensures isSet(t)
+{ 
+  var i := 0; 
+  var j := 0; 
+  var counter := 0; 
+  t := s1;  // Initialise t to be equal the first set 
+  while i < |s2| 
+    invariant 0 <= i <= |s2|  // Keep i within the size of 
+    decreases |s2| - i 
+  {
+      counter := 0; // Re-initialise the counter on each loop 
+      j := 0;       // Re-initialise j on each loop. 
+      while j < |s1|
+        invariant 0 <= j <= |s1|
+        decreases |s1| - j
+      {
+        if s2[i] == s1[j] {   // if a match exists, update the counter 
+          counter := counter + 1; 
+        }
+        j := j + 1;
+      }
+      if counter == 0 {
+        t := addToSet(t, s2[i]);
+      }
+      i := i + 1;
+    }
 }
 
 /* Intersects two sets s1 and s2, returning a new set t */
@@ -203,6 +234,7 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
 { // TODO: Implement the method
+  t := s1 + s2;
 }
 
 /* Difference of two sets s1 and s2, returning a new set t = s1 - s2 */
