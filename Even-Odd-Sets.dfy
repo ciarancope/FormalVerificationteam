@@ -258,26 +258,75 @@ ensures isSet(t)
 method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-  requires isSet(s1)
-  requires isSet(s2) 
+  requires isSet(s1) // Requires s1 tp be a set
+  requires isSet(s2) // Requires s2 tp be a set
   ensures isSet(t)
-{ // TODO: Implement the method
-  t := s1 - s2;
+{ 
+  var i := 0;
+  t := []; // Empty set if no different elements
+  while i < |s1| 
+    invariant 0 <= i <= |s1|
+    {
+      var b := true;
+      var j := 0;
+      while j < |s2| && b
+        invariant 0 <= j <= |s2|
+        {
+         if s1[i] == s2[j] {
+            b := false;
+          }
+          j := j + 1; 
+        }
+      if b {
+        t := t + [s1[i]];
+      }
+      i := i + 1;
+    }
 }
 
 /* Multiplies each element of a set s by n, returning a new set t */
 method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-{ // TODO: Implement the method
-
+  requires isSet(s)
+  requires n !in s
+{ 
+  var i := 0; 
+  t := [];
+  var placeholder := 0;
+  while i < |s| 
+    invariant 0 <= i <= |s|
+    invariant isSet(s)
+    decreases |s| - i
+    // invariant placeholder !in t
+    {
+      placeholder := s[i] * n;
+      t := addToSet(t, placeholder);
+      i := i + 1;
+    }
+    assert isSet(t); 
 }
 
 /* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
 method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-{ // TODO: Implement the method
+  requires |s1| == |s2| 
+  requires isSet(s1) 
+  requires isSet(s2)
+{ 
+  var i := 0; 
+  t := []; 
+  while i < |s1| 
+    invariant 0 <= i <= |s1|
+    decreases |s1| - i 
+    decreases |s2| - i 
+    {
+      var placeholder := s1[i] * s2[i];
+      t := addToSet(t, placeholder);
+      i := i + 1;
+    }
+  assert isSet(t);
 }
 
 /* Converts an even set to an odd set by inverting the parity of each element  
@@ -285,5 +334,18 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 method invertParitySet(s: seq<int>) returns (t:seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-{ // TODO: Implement the method
+  requires isSet(s) 
+  requires isEvenSet(s) 
+  ensures isSet(t) 
+{  
+  t := [];
+  var i := 0;
+  while i < |s| 
+    invariant 0 <= i <= |s|
+    decreases |s| - i
+    {
+      var j := invertParity(s[i]);
+      t := addToSet(t, j);
+      i := i + 1; 
+    }
 }

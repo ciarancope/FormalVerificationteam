@@ -53,6 +53,7 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   t := s1;  // Initialise t to be equal the first set 
   while i < |s2| 
     invariant 0 <= i <= |s2|  // Keep i within the size of 
+    invariant isSet(s2[i])
     decreases |s2| - i 
   {
       counter := 0; // Re-initialise the counter on each loop 
@@ -84,5 +85,4 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   ensures isSet(b)
 { // TODO: Implement the method
     b := s + [n];
-
 }
