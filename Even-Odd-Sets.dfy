@@ -52,15 +52,36 @@ lemma OddModulo(n: int)
 {}
 lemma ModuloOdd(n: int)
   ensures n % 2 != 0 ==> isOdd(n)
-{ // TODO: complete his proof
+{ 
+  if n % 2 != 0 {
+    var m := n / 2;    // This should return the floor of the division, issues with pos & negs
+    assert n == 2 * m + 1;
+  }
 }
 lemma checkOddCorrect(n: int)
   ensures checkOdd(n) <==> isOdd(n)
 { // TODO: complete his proof
+  OddModulo(n);
+  ModuloOdd(n);
 }
+
+// The product of two odd numbers is always odd
 lemma OddTimesOdd(n1: int, n2: int)
   ensures isOdd(n1) && isOdd(n2) ==> isOdd(n1 * n2)
-{ // TODO
+{ 
+  if isOdd(n1) && isOdd(n2) {
+    var m1 := n1/2;
+    var m2 := n2/2;
+    assert n1 == 2 * m1 + 1;
+    assert n2 == 2 * m2 + 1;
+    // n1 = 2 * m1 + 1, n2 = 2 * m2 + 1
+    // n1 * n2 = (2 * m1 + 1)(2 * m2 + 1) = 4*m1*m2 + 2*m1 +2*m2 + 1
+    // n1 * n2 = 2(2*m1 + m1 + m2) + 1
+    // n1 * n2 = m + 1
+    var m := 2*(2*m1*m2+m1+m2);
+    assert n1 * n2 == m + 1;
+    assert n1 * n2 == 4 * m1 * m2 + 2 * m1 +2 * m2 + 1;
+  }
 }
 
 /*** Even & Odd ***/
@@ -72,7 +93,17 @@ lemma NotEvenANDOdd(n: int)
 
 lemma EvenOrOdd(n: int)
   ensures isEven(n) || isOdd(n)
-{ // TODO: complete this proof
+{ 
+  if n % 2 == 0 { // If even 
+    var m := n/2;
+    assert n == 2 * m; // Assert even
+    assert n != 2 * m + 1; // Assert not odd
+  } 
+  if n % 2 != 0 { // If not even, check if odd 
+    var m := n/2;
+    assert n != 2 * m; // Assert not even
+    assert n == 2 * m + 1; // Assert odd
+  }
 }
 
 function invertParity(n: int): (m: int) {
@@ -83,6 +114,26 @@ lemma InvertParityCorrect(n: int)
   ensures isEven(n) ==> isOdd(invertParity(n))
   ensures isOdd(n) ==> isEven(invertParity(n))
 { // TODO: complete this proof
+  if isEven(n) {
+    var m := n/2;
+    assert invertParity(n) == 2 * m + 1;
+    assert invertParity(n) == n + 1; 
+    assert n + 1 == 2 * m + 1;
+    assert invertParity(n) % 2 != 0;
+    assert isOdd(invertParity(n));
+    assert isOdd(2 * m + 1);
+  }
+  if isOdd(n){
+    var m := n/2; 
+    assert invertParity(n) == 2 * (m + 1);
+    assert n + 1 == 2 * (m + 1);
+    assert invertParity(n) == n + 1; 
+    assert (n+1) % 2 == 0;
+    assert (2 * (m + 1)) % 2 == 0; 
+    assert invertParity(n) % 2 == 0;
+    assert isEven(2 * m + 2);
+    assert isEven(invertParity(n));
+  }
 }
 
 
@@ -96,6 +147,7 @@ predicate isSet(s: seq<int>) {
 
 // hint don't use return statements. Set b instead.
 method checkSet(s: seq<int>) returns (b: bool)
+  requires isSet(s)
   ensures b <==> isSet(s)
 { 
 b := true;                    // Assume to be true at the beginning 
@@ -344,8 +396,7 @@ method invertParitySet(s: seq<int>) returns (t:seq<int>)
     invariant 0 <= i <= |s|
     decreases |s| - i
     {
-      var j := invertParity(s[i]);
-      t := addToSet(t, j);
+      t := addToSet(t, invertParity(s[i]));
       i := i + 1; 
     }
 }
