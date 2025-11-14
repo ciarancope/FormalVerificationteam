@@ -202,7 +202,7 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 { 
   var i := 0; 
   // var counter := 0; 
-  var t := s1;  // Initialise t to be equal the first set 
+  t := s1;  // Initialise t to be equal the first set 
   while i < |s2| 
     {
       if s2[i] !in t {
