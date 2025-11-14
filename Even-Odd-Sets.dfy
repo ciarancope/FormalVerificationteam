@@ -314,6 +314,7 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // and as many relevant properties of the result as you can.
   requires isSet(s1) 
   requires isSet(s2)
+  ensures forall x :: 0 <= x < |t| ==> exists y, z :: 0 <= y < |s1| && 0 <= z < |s2| && t[x] == s1[y] * s2[z]    
 { 
   var i := 0; 
   var j := 0;
