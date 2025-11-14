@@ -263,27 +263,17 @@ ensures isSet(t)
 method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-  requires isSet(s1) // Requires s1 tp be a set
-  requires isSet(s2) // Requires s2 tp be a set
+  requires isSet(s1) // Requires s1 to be a set
+  requires isSet(s2) // Requires s2 to be a set
   ensures isSet(t)
 { 
   var i := 0;
-  t := []; // Empty set if no different elements
+  t := [];
   while i < |s1| 
-    invariant 0 <= i <= |s1|
-    {
-      var b := true;
-      var j := 0;
-      while j < |s2| && b
-        invariant 0 <= j <= |s2|
-        {
-         if s1[i] == s2[j] {
-            b := false;
-          }
-          j := j + 1; 
-        }
-      if b {
-        t := t + [s1[i]];
+    // invariant 0 <= i <= |s1|
+    { 
+      if s1[i] !in s2 {  // Don't include anything from s1 that is also in s2.
+        t := addToSet(t, s1[i]);
       }
       i := i + 1;
     }
