@@ -98,9 +98,9 @@ predicate isSet(s: seq<int>) {
 method checkSet(s: seq<int>) returns (b: bool)
   ensures b <==> isSet(s)
 { 
-b := true;                    // Assume to be true at the beginning 
-var i := 0;                   // Outer while loop 
-while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
+  b := true;                    // Assume to be true at the beginning 
+  var i := 0;                   // Outer while loop 
+  while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
     invariant 0 <= i <= |s|  // Invariant to confirm that i never exceeds the range
     decreases |s| - i
     invariant b ==> (forall u, v :: 0 <= u < i && 0 <= v < i && u != v ==> s[u] != s[v])
@@ -242,6 +242,7 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 requires isSet(s1)
 requires isSet(s2) 
 ensures isSet(t)
+ensures forall x :: 0 <= x < |t| ==> (t[x] in s1 && t[x] in s2)
 { 
   var i := 0;
   t := []; // Empty set if no overlap
