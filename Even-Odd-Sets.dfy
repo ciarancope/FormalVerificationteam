@@ -91,7 +91,7 @@ lemma InvertParityCorrect(n: int)
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
  // TODO: complete this predicate
-  forall i, j :: 0 <= i < |s| &&  0 <= j < |s| && i != j ==> s[i] != s[j] 
+  forall i, j :: 0 <= i < |s| && 0 <= j < |s| && i != j ==> s[i] != s[j] 
 }
 
 // hint don't use return statements. Set b instead.
@@ -185,7 +185,7 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
   requires isSet(s)
   requires n !in s       // Ensures that n is not already in s 
-  ensures |b| >= |s|     // Ensures that b is greater than s
+  ensures |b| >= |s|     // Ensures that b is greater or equal to s
   ensures b[..|s|] == s // Ensures that the prefix of b is s 
   ensures isSet(b)
 { // TODO: Implement the method
@@ -201,30 +201,35 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   ensures isSet(t)
 { 
   var i := 0; 
-  var j := 0; 
-  var counter := 0; 
-  t := s1;  // Initialise t to be equal the first set 
+  // var counter := 0; 
+  var t := s1;  // Initialise t to be equal the first set 
   while i < |s2| 
-    invariant 0 <= i <= |s2|  // Keep i within the size of 
-    decreases |s2| - i 
-  {
-      counter := 0; // Re-initialise the counter on each loop 
-      j := 0;       // Re-initialise j on each loop. 
-      while j < |s1|
-        invariant 0 <= j <= |s1|
-        decreases |s1| - j
-      {
-        if s2[i] == s1[j] {   // if a match exists, update the counter 
-          counter := counter + 1; 
-        }
-        j := j + 1;
-      }
-      if counter == 0 {
+    {
+      if s2[i] !in t {
         t := addToSet(t, s2[i]);
       }
       i := i + 1;
     }
 }
+  //   // invariant 0 <= i <= |s2|  // Keep i within the size of 
+  //   // decreases |s2| - i 
+  // {
+  //     counter := 0; // Re-initialise the counter on each loop 
+  //     j := 0;       // Re-initialise j on each loop. 
+  //     while j < |s1|
+  //       // invariant 0 <= j <= |s1|
+  //       // decreases |s1| - j
+  //     {
+  //       if s2[i] == s1[j] {   // if a match exists, update the counter 
+  //         counter := counter + 1; 
+  //       }
+  //       j := j + 1;
+  //     }
+  //     if counter == 0 {
+  //       t := addToSet(t, s2[i]);
+  //     }
+  //     i := i + 1;
+  //   }
 
 /* Intersects two sets s1 and s2, returning a new set t */
 method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
