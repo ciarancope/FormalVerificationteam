@@ -184,10 +184,10 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   // Marks will be awarded for specifying as much as possible all relevant properties of the output.
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
   requires isSet(s)
-  requires n !in s       // Ensures that n is not already in s 
   ensures |b| >= |s|     // Ensures that b is greater or equal to s
   ensures b[..|s|] == s // Ensures that the prefix of b is s 
   ensures isSet(b)
+  ensures exists x :: 0 <= x <= |b| ==> n == b[x]
 { // TODO: Implement the method
   if n !in s {
     b := s + [n];
