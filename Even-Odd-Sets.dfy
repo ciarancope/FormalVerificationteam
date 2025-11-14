@@ -290,7 +290,7 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
   requires isSet(s)
-  requires n !in s
+  ensures forall x :: 0 <= x < |t| ==> (t[x] / n) in s   
 { 
   var i := 0; 
   t := [];
