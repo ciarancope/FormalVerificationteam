@@ -142,7 +142,7 @@ lemma InvertParityCorrect(n: int)
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
  // TODO: complete this predicate
-  forall i, j :: 0 <= i < |s| &&  0 <= j < |s| && i != j ==> s[i] != s[j] 
+  forall i, j :: 0 <= i < |s| && 0 <= j < |s| && i != j ==> s[i] != s[j] 
 }
 
 // hint don't use return statements. Set b instead.
@@ -150,9 +150,9 @@ method checkSet(s: seq<int>) returns (b: bool)
   requires isSet(s)
   ensures b <==> isSet(s)
 { 
-b := true;                    // Assume to be true at the beginning 
-var i := 0;                   // Outer while loop 
-while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
+  b := true;                    // Assume to be true at the beginning 
+  var i := 0;                   // Outer while loop 
+  while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
     invariant 0 <= i <= |s|  // Invariant to confirm that i never exceeds the range
     decreases |s| - i
     invariant b ==> (forall u, v :: 0 <= u < i && 0 <= v < i && u != v ==> s[u] != s[v])
@@ -236,12 +236,16 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   // Marks will be awarded for specifying as much as possible all relevant properties of the output.
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
   requires isSet(s)
-  requires n !in s       // Ensures that n is not already in s 
-  ensures |b| >= |s|     // Ensures that b is greater than s
+  ensures |b| >= |s|     // Ensures that b is greater or equal to s
   ensures b[..|s|] == s // Ensures that the prefix of b is s 
   ensures isSet(b)
+  ensures exists x :: 0 <= x <= |b| ==> n == b[x]
 { // TODO: Implement the method
+  if n !in s {
     b := s + [n];
+  } else {
+    b := s;
+  }
 }
 
 /* Unions two sets s1 and s2, returning a new set t */
@@ -251,33 +255,20 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) 
   requires isSet(s2)
   ensures isSet(t)
+  ensures forall x :: 0 <= x <= |t| ==> t[x] in s1 || t[x] in s2
 { 
   var i := 0; 
-  var j := 0; 
-  var counter := 0; 
+  // var counter := 0; 
   t := s1;  // Initialise t to be equal the first set 
   while i < |s2| 
-    invariant 0 <= i <= |s2|  // Keep i within the size of 
-    decreases |s2| - i 
-  {
-      counter := 0; // Re-initialise the counter on each loop 
-      j := 0;       // Re-initialise j on each loop. 
-      while j < |s1|
-        invariant 0 <= j <= |s1|
-        decreases |s1| - j
-      {
-        if s2[i] == s1[j] {   // if a match exists, update the counter 
-          counter := counter + 1; 
-        }
-        j := j + 1;
-      }
-      if counter == 0 {
+    {
+      if s2[i] !in t {
         t := addToSet(t, s2[i]);
       }
       i := i + 1;
     }
 }
-
+  
 /* Intersects two sets s1 and s2, returning a new set t */
 method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
@@ -285,6 +276,7 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 requires isSet(s1)
 requires isSet(s2) 
 ensures isSet(t)
+ensures forall x :: 0 <= x < |t| ==> (t[x] in s1 && t[x] in s2)
 { 
   var i := 0;
   t := []; // Empty set if no overlap
@@ -310,27 +302,18 @@ ensures isSet(t)
 method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-  requires isSet(s1) // Requires s1 tp be a set
-  requires isSet(s2) // Requires s2 tp be a set
+  requires isSet(s1) // Requires s1 to be a set
+  requires isSet(s2) // Requires s2 to be a set
   ensures isSet(t)
+  ensures forall x :: 0 <= x < |t| ==> (t[x] !in s2 && t[x] in s1)  
 { 
   var i := 0;
-  t := []; // Empty set if no different elements
+  t := [];
   while i < |s1| 
-    invariant 0 <= i <= |s1|
-    {
-      var b := true;
-      var j := 0;
-      while j < |s2| && b
-        invariant 0 <= j <= |s2|
-        {
-         if s1[i] == s2[j] {
-            b := false;
-          }
-          j := j + 1; 
-        }
-      if b {
-        t := t + [s1[i]];
+    // invariant 0 <= i <= |s1|
+    { 
+      if s1[i] !in s2 {  // Don't include anything from s1 that is also in s2.
+        t := addToSet(t, s1[i]);
       }
       i := i + 1;
     }
@@ -341,7 +324,7 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
   requires isSet(s)
-  requires n !in s
+  ensures forall x :: 0 <= x < |t| ==> (t[x] / n) in s   
 { 
   var i := 0; 
   t := [];
@@ -363,19 +346,23 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-  requires |s1| == |s2| 
   requires isSet(s1) 
   requires isSet(s2)
+  ensures forall x :: 0 <= x < |t| ==> exists y, z :: 0 <= y < |s1| && 0 <= z < |s2| && t[x] == s1[y] * s2[z]    
 { 
   var i := 0; 
+  var j := 0;
   t := []; 
   while i < |s1| 
-    invariant 0 <= i <= |s1|
-    decreases |s1| - i 
-    decreases |s2| - i 
+    // invariant 0 <= i <= |s1|
+    // decreases |s1| - i 
+    // decreases |s2| - i 
     {
-      var placeholder := s1[i] * s2[i];
-      t := addToSet(t, placeholder);
+      while j < |s2| {
+        var placeholder := s1[i] * s2[j];
+        t := addToSet(t, placeholder);
+        j := j + 1;
+      }
       i := i + 1;
     }
   assert isSet(t);
