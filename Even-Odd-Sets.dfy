@@ -271,6 +271,7 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) // Requires s1 to be a set
   requires isSet(s2) // Requires s2 to be a set
   ensures isSet(t)
+  ensures forall x :: 0 <= x < |t| ==> (t[x] !in s2 && t[x] in s1)  
 { 
   var i := 0;
   t := [];
