@@ -189,7 +189,11 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   ensures b[..|s|] == s // Ensures that the prefix of b is s 
   ensures isSet(b)
 { // TODO: Implement the method
+  if n !in s {
     b := s + [n];
+  } else {
+    b := s;
+  }
 }
 
 /* Unions two sets s1 and s2, returning a new set t */
@@ -306,19 +310,22 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
-  requires |s1| == |s2| 
   requires isSet(s1) 
   requires isSet(s2)
 { 
   var i := 0; 
+  var j := 0;
   t := []; 
   while i < |s1| 
-    invariant 0 <= i <= |s1|
-    decreases |s1| - i 
-    decreases |s2| - i 
+    // invariant 0 <= i <= |s1|
+    // decreases |s1| - i 
+    // decreases |s2| - i 
     {
-      var placeholder := s1[i] * s2[i];
-      t := addToSet(t, placeholder);
+      while j < |s2| {
+        var placeholder := s1[i] * s2[j];
+        t := addToSet(t, placeholder);
+        j := j + 1;
+      }
       i := i + 1;
     }
   assert isSet(t);
