@@ -61,8 +61,7 @@ lemma ModuloOdd(n: int)
 lemma checkOddCorrect(n: int)
   ensures checkOdd(n) <==> isOdd(n)
 { // TODO: complete his proof
-  OddModulo(n);
-  ModuloOdd(n);
+  assert OddModulo(n) <==> ModuloOdd(n);
 }
 
 // The product of two odd numbers is always odd
@@ -72,15 +71,14 @@ lemma OddTimesOdd(n1: int, n2: int)
   if isOdd(n1) && isOdd(n2) {
     var m1 := n1/2;
     var m2 := n2/2;
-    assert n1 == 2 * m1 + 1;
-    assert n2 == 2 * m2 + 1;
-    // n1 = 2 * m1 + 1, n2 = 2 * m2 + 1
+    assert n1 == 2 * m1 + 1; // n1 is odd
+    assert n2 == 2 * m2 + 1; // n2 is odd
     // n1 * n2 = (2 * m1 + 1)(2 * m2 + 1) = 4*m1*m2 + 2*m1 +2*m2 + 1
     // n1 * n2 = 2(2*m1 + m1 + m2) + 1
     // n1 * n2 = m + 1
-    var m := 2*(2*m1*m2+m1+m2);
-    assert n1 * n2 == m + 1;
-    assert n1 * n2 == 4 * m1 * m2 + 2 * m1 +2 * m2 + 1;
+    var m := 2*(2*m1*m2+m1+m2); // 
+    assert exists x: int :: x*2 == m; // m is even 
+    assert n1 * n2 == m + 1; // Product is odd
   }
 }
 
@@ -92,17 +90,15 @@ lemma NotEvenANDOdd(n: int)
 }
 
 lemma EvenOrOdd(n: int)
-  ensures isEven(n) || isOdd(n)
+  ensures isEven(n) <==> !isOdd(n)
 { 
-  if n % 2 == 0 { // If even 
+  if isEven(n) { // If even 
     var m := n/2;
-    assert n == 2 * m; // Assert even
     assert n != 2 * m + 1; // Assert not odd
   } 
-  if n % 2 != 0 { // If not even, check if odd 
+  if isOdd(n) { // If odd
     var m := n/2;
     assert n != 2 * m; // Assert not even
-    assert n == 2 * m + 1; // Assert odd
   }
 }
 
@@ -142,7 +138,7 @@ lemma InvertParityCorrect(n: int)
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
  // TODO: complete this predicate
-  forall i, j :: 0 <= i < |s| && 0 <= j < |s| && i != j ==> s[i] != s[j] 
+  forall i: int, j: int :: 0 <= i < |s| && 0 <= j < |s| && i != j ==> s[i] != s[j] 
 }
 
 // hint don't use return statements. Set b instead.
@@ -176,7 +172,7 @@ method checkSet(s: seq<int>) returns (b: bool)
 /* An even set is a set where all elements are even */
 ghost predicate isEvenSet(s: seq<int>) {
  // TODO: complete this predicate
-  forall i :: 0 <= i < |s| ==> s[i] % 2 == 0
+  forall i: int :: 0 <= i < |s| ==> s[i] % 2 == 0
 }
 
 method checkEvenSet(s: seq<int>) returns (b: bool)
