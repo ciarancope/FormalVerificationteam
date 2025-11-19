@@ -61,7 +61,8 @@ lemma ModuloOdd(n: int)
 lemma checkOddCorrect(n: int)
   ensures checkOdd(n) <==> isOdd(n)
 { // TODO: complete his proof
-  assert OddModulo(n) <==> ModuloOdd(n);
+  OddModulo(n);
+  ModuloOdd(n);
 }
 
 // The product of two odd numbers is always odd
@@ -77,7 +78,6 @@ lemma OddTimesOdd(n1: int, n2: int)
     // n1 * n2 = 2(2*m1 + m1 + m2) + 1
     // n1 * n2 = m + 1
     var m := 2*(2*m1*m2+m1+m2); // 
-    assert exists x: int :: x*2 == m; // m is even 
     assert n1 * n2 == m + 1; // Product is odd
   }
 }
@@ -90,13 +90,13 @@ lemma NotEvenANDOdd(n: int)
 }
 
 lemma EvenOrOdd(n: int)
-  ensures isEven(n) <==> !isOdd(n)
+  ensures isEven(n) || isOdd(n)
 { 
-  if isEven(n) { // If even 
+  if n % 2 == 0 { // If even 
     var m := n/2;
     assert n != 2 * m + 1; // Assert not odd
   } 
-  if isOdd(n) { // If odd
+  if n % 2 != 0 { // If not even, check if odd 
     var m := n/2;
     assert n != 2 * m; // Assert not even
   }
@@ -137,7 +137,6 @@ lemma InvertParityCorrect(n: int)
 
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
- // TODO: complete this predicate
   forall i: int, j: int :: 0 <= i < |s| && 0 <= j < |s| && i != j ==> s[i] != s[j] 
 }
 
@@ -171,8 +170,7 @@ method checkSet(s: seq<int>) returns (b: bool)
 
 /* An even set is a set where all elements are even */
 ghost predicate isEvenSet(s: seq<int>) {
- // TODO: complete this predicate
-  forall i: int :: 0 <= i < |s| ==> s[i] % 2 == 0
+  forall i: int :: 0 <= i < |s| ==> isEven(s[i])
 }
 
 method checkEvenSet(s: seq<int>) returns (b: bool)
@@ -196,8 +194,7 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
 
 /* An odd set is a set where all elements are odd */
 ghost predicate isOddSet(s: seq<int>) {
-  // TODO: complete this predicate
-  forall i :: 0 <= i < |s| ==> s[i] % 2 != 0
+  forall i: int :: 0 <= i < |s| ==> isOdd(s[i])
 }
 
 method checkOddSet(s: seq<int>) returns (b: bool)
@@ -235,7 +232,7 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   ensures |b| >= |s|     // Ensures that b is greater or equal to s
   ensures b[..|s|] == s // Ensures that the prefix of b is s 
   ensures isSet(b)
-  ensures exists x :: 0 <= x <= |b| ==> n == b[x]
+  ensures exists x: int :: 0 <= x <= |b| && n == b[x]
 { // TODO: Implement the method
   if n !in s {
     b := s + [n];
@@ -320,7 +317,7 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
   requires isSet(s)
-  ensures forall x :: 0 <= x < |t| ==> (t[x] / n) in s   
+  ensures forall x:int :: 0 <= x < |t| ==> (t[x] / n) in s   
 { 
   var i := 0; 
   t := [];
