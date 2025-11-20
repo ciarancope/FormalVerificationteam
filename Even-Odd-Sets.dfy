@@ -135,14 +135,14 @@ method checkSet(s: seq<int>) returns (b: bool)
 { 
   b := true;                    // Assume to be true at the beginning 
   var i := 0;                   // Outer while loop 
-  while i < |s| // && b                // While loop to sort through set, stop if i reaches the end or duplicate found
+  while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
     invariant 0 <= i <= |s|  // Invariant to confirm that i never exceeds the range
     decreases |s| - i
     invariant b ==> (forall u, v :: 0 <= u < i && 0 <= v < i && u != v ==> s[u] != s[v])
     invariant b ==> (forall u, v :: 0 <= u < i && i <= v < |s| ==> s[u] != s[v])
     {
     var j := i + 1;
-    while j < |s| // && b       // Stop if j reaches the end or duplicate found
+    while j < |s| && b       // Stop if j reaches the end or duplicate found
       invariant 0 <= j <= |s|
       decreases |s| - j
       invariant b ==> (forall v :: i < v < j ==> s[i] != s[v])
