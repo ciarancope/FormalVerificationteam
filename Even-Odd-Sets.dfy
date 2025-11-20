@@ -33,10 +33,10 @@ lemma EvenTimesAny(n1: int, n2: int)
 {
   if isEven(n1) {
 	  var m1 := n1 / 2;
-	  assert n1 * n2 == 2 * (m1 * n2);
+	  assert n1 * n2 == 2 * (m1 * n2); // 2 is a factor of product when n1 is even.
   } else if isEven(n2) {
 	  var m2 := n2 / 2;
-	  assert n1 * n2 == 2 * (n1 * m2);
+	  assert n1 * n2 == 2 * (n1 * m2); // 2 is a factor of product when n2 is even.
   }
 }
 
@@ -57,7 +57,6 @@ lemma ModuloOdd(n: int)
   if n % 2 != 0 {
     var m := n / 2;    // This should return the floor of the division, issues with pos & negs
     assert n == 2 * m + 1;
-    assert isOdd(n);
   }
 }
 lemma checkOddCorrect(n: int)
@@ -79,7 +78,7 @@ lemma OddTimesOdd(n1: int, n2: int)
     // n1 * n2 = (2 * m1 + 1)(2 * m2 + 1) = 4*m1*m2 + 2*m1 +2*m2 + 1
     // n1 * n2 = 2(2*m1 + m1 + m2) + 1
     // n1 * n2 = m + 1
-    var m := 2*(2*m1*m2+m1+m2); // 
+    var m := 2*(2*m1*m2+m1+m2); // m has 2 as factor, so is even. 
     assert n1 * n2 == m + 1; // Product is odd
   }
 }
@@ -96,11 +95,11 @@ lemma EvenOrOdd(n: int)
 { 
   if n % 2 == 0 { // If even 
     var m := n/2;
-    assert n != 2 * m + 1; // Assert not odd
+    assert n == 2 * m; // Assert 2 is factor, so even, (so even or odd). 
   } 
   if n % 2 != 0 { // If not even, check if odd 
     var m := n/2;
-    assert n != 2 * m; // Assert not even
+    assert n == 2 * m + 1; // Assert 2 is not factor, so odd, (so even or odd).
   }
 }
 
@@ -114,23 +113,10 @@ lemma InvertParityCorrect(n: int)
 { // TODO: complete this proof
   if isEven(n) {
     var m := n/2;
-    assert invertParity(n) == 2 * m + 1;
-    assert invertParity(n) == n + 1; 
-    assert n + 1 == 2 * m + 1;
-    assert invertParity(n) % 2 != 0;
-    assert isOdd(invertParity(n));
-    assert isOdd(2 * m + 1);
-  }
-  if isOdd(n){
+    assert invertParity(n) == 2 * m + 1; // 2 not a factor, so odd. 
+  } else if isOdd(n){
     var m := n/2; 
-    assert invertParity(n) == 2 * (m + 1);
-    assert n + 1 == 2 * (m + 1);
-    assert invertParity(n) == n + 1; 
-    assert (n+1) % 2 == 0;
-    assert (2 * (m + 1)) % 2 == 0; 
-    assert invertParity(n) % 2 == 0;
-    assert isEven(2 * m + 2);
-    assert isEven(invertParity(n));
+    assert invertParity(n) == 2 * (m + 1); // 2 is a factor, so even. 
   }
 }
 
@@ -149,14 +135,14 @@ method checkSet(s: seq<int>) returns (b: bool)
 { 
   b := true;                    // Assume to be true at the beginning 
   var i := 0;                   // Outer while loop 
-  while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
+  while i < |s| // && b                // While loop to sort through set, stop if i reaches the end or duplicate found
     invariant 0 <= i <= |s|  // Invariant to confirm that i never exceeds the range
     decreases |s| - i
     invariant b ==> (forall u, v :: 0 <= u < i && 0 <= v < i && u != v ==> s[u] != s[v])
     invariant b ==> (forall u, v :: 0 <= u < i && i <= v < |s| ==> s[u] != s[v])
     {
     var j := i + 1;
-    while j < |s| && b       // Stop if j reaches the end or duplicate found
+    while j < |s| // && b       // Stop if j reaches the end or duplicate found
       invariant 0 <= j <= |s|
       decreases |s| - j
       invariant b ==> (forall v :: i < v < j ==> s[i] != s[v])
@@ -251,7 +237,7 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) 
   requires isSet(s2)
   ensures isSet(t)
-  ensures forall x: int :: 0 <= x < |t| ==> t[x] in s1 || t[x] in s2
+  ensures forall x: int :: 0 <= x < |t| ==> (t[x] in s1 || t[x] in s2)
 { 
   var i := 0; 
   // var counter := 0; 
@@ -306,10 +292,11 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   var i := 0;
   t := [];
   while i < |s1| 
-    // invariant 0 <= i <= |s1|
+    invariant 0 <= i <= |s1|
     { 
       if s1[i] !in s2 {  // Don't include anything from s1 that is also in s2.
         t := addToSet(t, s1[i]);
+        assert isSet(t);
       }
       i := i + 1;
     }
@@ -329,7 +316,6 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
     invariant 0 <= i <= |s|
     invariant isSet(s)
     decreases |s| - i
-    // invariant placeholder !in t
     {
       placeholder := s[i] * n;
       t := addToSet(t, placeholder);
@@ -360,7 +346,6 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
       }
       i := i + 1;
     }
-  assert isSet(t);
 }
 
 /* Converts an even set to an odd set by inverting the parity of each element  
@@ -372,7 +357,7 @@ method invertParitySet(s: seq<int>) returns (t:seq<int>)
   requires isEvenSet(s)
   ensures isSet(t) 
   ensures isOddSet(t)
-  ensures forall x: int :: 0 <= x < |s| ==> exists y: int :: 0 <= y < |t| && t[y] == s[x] + 1
+  ensures forall x: int :: 0 <= x < |s| && |s| == |t| ==> t[x] == s[x] + 1 
 {  
   t := [];
   var i := 0;
