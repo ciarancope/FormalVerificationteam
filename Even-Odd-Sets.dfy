@@ -1,3 +1,4 @@
+// Keith Begley 10261631 & Ciarán Cope
 
 /*** Even ***/
 
@@ -56,6 +57,7 @@ lemma ModuloOdd(n: int)
   if n % 2 != 0 {
     var m := n / 2;    // This should return the floor of the division, issues with pos & negs
     assert n == 2 * m + 1;
+    assert isOdd(n);
   }
 }
 lemma checkOddCorrect(n: int)
@@ -232,10 +234,11 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   ensures |b| >= |s|     // Ensures that b is greater or equal to s
   ensures b[..|s|] == s // Ensures that the prefix of b is s 
   ensures isSet(b)
-  ensures exists x: int :: 0 <= x <= |b| && n == b[x]
+  ensures exists x: int :: 0 <= x < |b| && n == b[x]
 { // TODO: Implement the method
   if n !in s {
     b := s + [n];
+    assert n == b[|b| - 1];
   } else {
     b := s;
   }
@@ -248,7 +251,7 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) 
   requires isSet(s2)
   ensures isSet(t)
-  ensures forall x :: 0 <= x <= |t| ==> t[x] in s1 || t[x] in s2
+  ensures forall x: int :: 0 <= x < |t| ==> t[x] in s1 || t[x] in s2
 { 
   var i := 0; 
   // var counter := 0; 
@@ -269,7 +272,7 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 requires isSet(s1)
 requires isSet(s2) 
 ensures isSet(t)
-ensures forall x :: 0 <= x < |t| ==> (t[x] in s1 && t[x] in s2)
+ensures forall x: int :: 0 <= x < |t| ==> (t[x] in s1 && t[x] in s2)
 { 
   var i := 0;
   t := []; // Empty set if no overlap
@@ -298,7 +301,7 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) // Requires s1 to be a set
   requires isSet(s2) // Requires s2 to be a set
   ensures isSet(t)
-  ensures forall x :: 0 <= x < |t| ==> (t[x] !in s2 && t[x] in s1)  
+  ensures forall x: int :: 0 <= x < |t| ==> (t[x] !in s2 && t[x] in s1)  
 { 
   var i := 0;
   t := [];
@@ -317,7 +320,7 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
   requires isSet(s)
-  ensures forall x:int :: 0 <= x < |t| ==> (t[x] / n) in s   
+  ensures forall x: int :: 0 <= x < |s| ==> exists y: int :: 0 <= y < |t| && t[y] == n * s[x]   
 { 
   var i := 0; 
   t := [];
@@ -332,7 +335,6 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
       t := addToSet(t, placeholder);
       i := i + 1;
     }
-    assert isSet(t); 
 }
 
 /* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
@@ -341,7 +343,7 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 // and as many relevant properties of the result as you can.
   requires isSet(s1) 
   requires isSet(s2)
-  ensures forall x :: 0 <= x < |t| ==> exists y, z :: 0 <= y < |s1| && 0 <= z < |s2| && t[x] == s1[y] * s2[z]    
+  ensures forall x: int :: 0 <= x < |t| ==> exists y: int, z: int :: 0 <= y < |s1| && 0 <= z < |s2| && t[x] == s1[y] * s2[z]    
 { 
   var i := 0; 
   var j := 0;
@@ -367,8 +369,10 @@ method invertParitySet(s: seq<int>) returns (t:seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
   requires isSet(s) 
-  requires isEvenSet(s) 
+  requires isEvenSet(s)
   ensures isSet(t) 
+  ensures isOddSet(t)
+  ensures forall x: int :: 0 <= x < |s| ==> exists y: int :: 0 <= y < |t| && t[y] == s[x] + 1
 {  
   t := [];
   var i := 0;
