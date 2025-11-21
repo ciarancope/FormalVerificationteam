@@ -55,8 +55,8 @@ lemma ModuloOdd(n: int)
   ensures n % 2 != 0 ==> isOdd(n)
 { 
   if n % 2 != 0 {
-    var m := n / 2;    // This should return the floor of the division, issues with pos & negs
-    assert n == 2 * m + 1;
+    var m := n / 2;    // This should return the floor of the division
+    assert n == 2 * m + 1; // 2 multiplied by value = positive, add 1 will always result in negative 
   }
 }
 lemma checkOddCorrect(n: int)
@@ -113,18 +113,31 @@ lemma InvertParityCorrect(n: int)
 { // TODO: complete this proof
   if isEven(n) {
     var m := n/2;
-    assert invertParity(n) == 2 * m + 1; // 2 not a factor, so odd. 
-  } else if isOdd(n){
+    assert invertParity(n) == 2 * m + 1; // Invert should equal a negative number
+    assert invertParity(n) == n + 1; // Confirmation
+    assert n + 1 == 2 * m + 1;
+    assert invertParity(n) % 2 != 0; // Determine
+    assert isOdd(invertParity(n));
+    assert isOdd(2 * m + 1);
+  }
+  if isOdd(n){
     var m := n/2; 
-    assert invertParity(n) == 2 * (m + 1); // 2 is a factor, so even. 
+    assert invertParity(n) == 2 * (m + 1); // Invert parity should equal a pos number
+    assert n + 1 == 2 * (m + 1);
+    assert invertParity(n) == n + 1; 
+    assert (n+1) % 2 == 0;
+    assert (2 * (m + 1)) % 2 == 0; 
+    assert invertParity(n) % 2 == 0;
+    assert isEven(2 * m + 2);
+    assert isEven(invertParity(n));
   }
 }
-
 
 /*** Even and Odd Sets ***/
 
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
+  // forall i & j, there is no value of i and j (apart from when equals) where the two values are equal
   forall i: int, j: int :: 0 <= i < |s| && 0 <= j < |s| && i != j ==> s[i] != s[j] 
 }
 
@@ -148,7 +161,7 @@ while i < |s| && b                // While loop to sort through set, stop if i r
       invariant b ==> (forall v :: i < v < j ==> s[i] != s[v])
       {
        if s[i] == s[j] {
-          b := false; 
+          b := false; // Duplicate found, set b to false 
         }
         j := j + 1;
       }
@@ -158,6 +171,7 @@ while i < |s| && b                // While loop to sort through set, stop if i r
 
 /* An even set is a set where all elements are even */
 ghost predicate isEvenSet(s: seq<int>) {
+  // forall i in S, implies that all values are even. 
   forall i: int :: 0 <= i < |s| ==> isEven(s[i])
 }
 
@@ -182,6 +196,7 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
 
 /* An odd set is a set where all elements are odd */
 ghost predicate isOddSet(s: seq<int>) {
+  // forall i in S, implies that all values are odd. 
   forall i: int :: 0 <= i < |s| ==> isOdd(s[i])
 }
 
@@ -217,18 +232,19 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   // Marks will be awarded for specifying as much as possible all relevant properties of the output.
   // Hint: You don't need to reimplement addToSet as a function to use in your specification.
   requires isSet(s)
-  requires n !in s       // Ensures that n is not already in s 
-  ensures |b| >= |s|     // Ensures that b is greater than s
+  ensures |b| >= |s|     // Ensures that b is greater or equal to s
   ensures b[..|s|] == s // Ensures that the prefix of b is s 
   ensures isSet(b)
   ensures exists x: int :: 0 <= x < |b| && n == b[x]
 { // TODO: Implement the method
+  if n !in s {
     b := s + [n];
     assert n == b[|b| - 1];
   } else {
     b := s;
   }
 }
+
 
 /* Unions two sets s1 and s2, returning a new set t */
 method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
