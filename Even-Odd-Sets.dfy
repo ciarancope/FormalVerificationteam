@@ -1,3 +1,4 @@
+// Keith Begley 10261631 & Ciarán Cope 21363716
 
 /*** Even ***/
 
@@ -32,10 +33,10 @@ lemma EvenTimesAny(n1: int, n2: int)
 {
   if isEven(n1) {
 	  var m1 := n1 / 2;
-	  assert n1 * n2 == 2 * (m1 * n2);
+	  assert n1 * n2 == 2 * (m1 * n2); // 2 is a factor of product when n1 is even.
   } else if isEven(n2) {
 	  var m2 := n2 / 2;
-	  assert n1 * n2 == 2 * (n1 * m2);
+	  assert n1 * n2 == 2 * (n1 * m2); // 2 is a factor of product when n2 is even.
   }
 }
 
@@ -72,15 +73,13 @@ lemma OddTimesOdd(n1: int, n2: int)
   if isOdd(n1) && isOdd(n2) {
     var m1 := n1/2;
     var m2 := n2/2;
-    assert n1 == 2 * m1 + 1;
-    assert n2 == 2 * m2 + 1;
-    // n1 = 2 * m1 + 1, n2 = 2 * m2 + 1
+    assert n1 == 2 * m1 + 1; // n1 is odd
+    assert n2 == 2 * m2 + 1; // n2 is odd
     // n1 * n2 = (2 * m1 + 1)(2 * m2 + 1) = 4*m1*m2 + 2*m1 +2*m2 + 1
     // n1 * n2 = 2(2*m1 + m1 + m2) + 1
     // n1 * n2 = m + 1
-    var m := 2*(2*m1*m2+m1+m2);
-    assert n1 * n2 == m + 1;
-    assert n1 * n2 == 4 * m1 * m2 + 2 * m1 +2 * m2 + 1;
+    var m := 2*(2*m1*m2+m1+m2); // m has 2 as factor, so is even. 
+    assert n1 * n2 == m + 1; // Product is odd
   }
 }
 
@@ -96,13 +95,11 @@ lemma EvenOrOdd(n: int)
 { 
   if n % 2 == 0 { // If even 
     var m := n/2;
-    assert n == 2 * m; // Assert even
-    assert n != 2 * m + 1; // Assert not odd
+    assert n == 2 * m; // Assert 2 is factor, so even, (so even or odd). 
   } 
   if n % 2 != 0 { // If not even, check if odd 
     var m := n/2;
-    assert n != 2 * m; // Assert not even
-    assert n == 2 * m + 1; // Assert odd
+    assert n == 2 * m + 1; // Assert 2 is not factor, so odd, (so even or odd).
   }
 }
 
@@ -116,23 +113,10 @@ lemma InvertParityCorrect(n: int)
 { // TODO: complete this proof
   if isEven(n) {
     var m := n/2;
-    assert invertParity(n) == 2 * m + 1;
-    assert invertParity(n) == n + 1; 
-    assert n + 1 == 2 * m + 1;
-    assert invertParity(n) % 2 != 0;
-    assert isOdd(invertParity(n));
-    assert isOdd(2 * m + 1);
-  }
-  if isOdd(n){
+    assert invertParity(n) == 2 * m + 1; // 2 not a factor, so odd. 
+  } else if isOdd(n){
     var m := n/2; 
-    assert invertParity(n) == 2 * (m + 1);
-    assert n + 1 == 2 * (m + 1);
-    assert invertParity(n) == n + 1; 
-    assert (n+1) % 2 == 0;
-    assert (2 * (m + 1)) % 2 == 0; 
-    assert invertParity(n) % 2 == 0;
-    assert isEven(2 * m + 2);
-    assert isEven(invertParity(n));
+    assert invertParity(n) == 2 * (m + 1); // 2 is a factor, so even. 
   }
 }
 
@@ -141,8 +125,7 @@ lemma InvertParityCorrect(n: int)
 
 /* A set is represented as a sequence with no duplicates */
 predicate isSet(s: seq<int>) {
- // TODO: complete this predicate
-  forall i, j :: 0 <= i < |s| && 0 <= j < |s| && i != j ==> s[i] != s[j] 
+  forall i: int, j: int :: 0 <= i < |s| && 0 <= j < |s| && i != j ==> s[i] != s[j] 
 }
 
 // hint don't use return statements. Set b instead.
@@ -175,8 +158,7 @@ while i < |s| && b                // While loop to sort through set, stop if i r
 
 /* An even set is a set where all elements are even */
 ghost predicate isEvenSet(s: seq<int>) {
- // TODO: complete this predicate
-  forall i :: 0 <= i < |s| ==> s[i] % 2 == 0
+  forall i: int :: 0 <= i < |s| ==> isEven(s[i])
 }
 
 method checkEvenSet(s: seq<int>) returns (b: bool)
@@ -200,8 +182,7 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
 
 /* An odd set is a set where all elements are odd */
 ghost predicate isOddSet(s: seq<int>) {
-  // TODO: complete this predicate
-  forall i :: 0 <= i < |s| ==> s[i] % 2 != 0
+  forall i: int :: 0 <= i < |s| ==> isOdd(s[i])
 }
 
 method checkOddSet(s: seq<int>) returns (b: bool)
@@ -240,8 +221,13 @@ method addToSet(s: seq<int>, n: int) returns (b: seq<int>)
   ensures |b| >= |s|     // Ensures that b is greater than s
   ensures b[..|s|] == s // Ensures that the prefix of b is s 
   ensures isSet(b)
+  ensures exists x: int :: 0 <= x < |b| && n == b[x]
 { // TODO: Implement the method
     b := s + [n];
+    assert n == b[|b| - 1];
+  } else {
+    b := s;
+  }
 }
 
 /* Unions two sets s1 and s2, returning a new set t */
@@ -251,7 +237,7 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) 
   requires isSet(s2)
   ensures isSet(t)
-  ensures forall x :: 0 <= x <= |t| ==> t[x] in s1 || t[x] in s2
+  ensures forall x: int :: 0 <= x < |t| ==> (t[x] in s1 || t[x] in s2)
 { 
   var i := 0; 
   // var counter := 0; 
@@ -272,6 +258,7 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 requires isSet(s1)
 requires isSet(s2) 
 ensures isSet(t)
+ensures forall x: int :: 0 <= x < |t| ==> (t[x] in s1 && t[x] in s2)
 { 
   var i := 0;
   t := []; // Empty set if no overlap
@@ -300,15 +287,16 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) // Requires s1 to be a set
   requires isSet(s2) // Requires s2 to be a set
   ensures isSet(t)
-  ensures forall x :: 0 <= x < |t| ==> (t[x] !in s2 && t[x] in s1)  
+  ensures forall x: int :: 0 <= x < |t| ==> (t[x] !in s2 && t[x] in s1)  
 { 
   var i := 0;
   t := []; // Empty set if no different elements
   while i < |s1| 
-    // invariant 0 <= i <= |s1|
+    invariant 0 <= i <= |s1|
     { 
       if s1[i] !in s2 {  // Don't include anything from s1 that is also in s2.
         t := addToSet(t, s1[i]);
+        assert isSet(t);
       }
       i := i + 1;
     }
@@ -319,7 +307,7 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
   requires isSet(s)
-  ensures forall x :: 0 <= x < |t| ==> (t[x] / n) in s   
+  ensures forall x: int :: 0 <= x < |s| ==> exists y: int :: 0 <= y < |t| && t[y] == n * s[x]   
 { 
   var i := 0; 
   t := [];
@@ -328,7 +316,6 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
     invariant 0 <= i <= |s|
     invariant isSet(s)
     decreases |s| - i
-    // invariant placeholder !in t
     {
       placeholder := s[i] * n;
       t := addToSet(t, placeholder);
@@ -343,7 +330,7 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires |s1| == |s2| 
   requires isSet(s1) 
   requires isSet(s2)
-  ensures forall x :: 0 <= x < |t| ==> exists y, z :: 0 <= y < |s1| && 0 <= z < |s2| && t[x] == s1[y] * s2[z]    
+  ensures forall x: int :: 0 <= x < |t| ==> exists y: int, z: int :: 0 <= y < |s1| && 0 <= z < |s2| && t[x] == s1[y] * s2[z]    
 { 
   var i := 0; 
   var j := 0;
@@ -360,7 +347,6 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
       }
       i := i + 1;
     }
-  assert isSet(t);
 }
 
 /* Converts an even set to an odd set by inverting the parity of each element  
@@ -369,8 +355,10 @@ method invertParitySet(s: seq<int>) returns (t:seq<int>)
 // TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
 // and as many relevant properties of the result as you can.
   requires isSet(s) 
-  requires isEvenSet(s) 
+  requires isEvenSet(s)
   ensures isSet(t) 
+  ensures isOddSet(t)
+  ensures forall x: int :: 0 <= x < |s| && |s| == |t| ==> t[x] == s[x] + 1 
 {  
   t := [];
   var i := 0;
