@@ -171,7 +171,7 @@ while i < |s| && b                // While loop to sort through set, stop if i r
 
 /* An even set is a set where all elements are even */
 ghost predicate isEvenSet(s: seq<int>) {
-  // forall i in S, implies that all values are even. 
+  // forall i in s, implies that all values are even. 
   forall i: int :: 0 <= i < |s| ==> isEven(s[i])
 }
 
