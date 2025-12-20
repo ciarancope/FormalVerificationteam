@@ -454,6 +454,35 @@ method difference(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   // }
 }
 
+// /* multiplies each element of a set s by n, returning a new set t */
+// method setScale(s: seq<int>, n: int) returns (t: seq<int>)
+//   requires isSet(s)
+//   ensures isSet(t)
+//   ensures forall x :: (0 <= x < |t| ==> exists i :: 0<= i < |s| && t[x] == s[i] * n)
+//   ensures forall x :: (0 <= x < |s| ==> s[x] * n in t)
+//   ensures isEvenSet(s) || isEven(n) ==> isEvenSet(t)
+//   ensures isOddSet(s) && isOdd(n) ==> isOddSet(t)
+// { // TODO: fill in your code here and prove method correct
+//   // hint: you may need to call:
+//   //  EvenTimes(s[i], n);
+//   //  OddTimesOdd(s[i], n);
+//   // at the appropriate place in your code to help Dafny prove correctness
+//   var i := 0; 
+//   t := [];
+//   var placeholder := 0;
+//   while i < |s| 
+//     invariant 0 <= i <= |s|
+//     invariant isSet(s)
+//     decreases |s| - i
+//     {
+//       placeholder := s[i] * n;
+//       t := addToSet(t, placeholder);
+//       i := i + 1;
+//     }
+// }
+
+// ...existing code...
+
 /* multiplies each element of a set s by n, returning a new set t */
 method setScale(s: seq<int>, n: int) returns (t: seq<int>)
   requires isSet(s)
@@ -462,24 +491,73 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
   ensures forall x :: (0 <= x < |s| ==> s[x] * n in t)
   ensures isEvenSet(s) || isEven(n) ==> isEvenSet(t)
   ensures isOddSet(s) && isOdd(n) ==> isOddSet(t)
-{ // TODO: fill in your code here and prove method correct
-  // hint: you may need to call:
-  //  EvenTimes(s[i], n);
-  //  OddTimesOdd(s[i], n);
-  // at the appropriate place in your code to help Dafny prove correctness
-  var i := 0; 
+{
+  var i := 0;
   t := [];
   var placeholder := 0;
-  while i < |s| 
+
+  while i < |s|
     invariant 0 <= i <= |s|
-    invariant isSet(s)
+    invariant isSet(t)
+
+    // Soundness: every element in t is some scaled element from the processed prefix s[..i]
+    invariant forall p :: 0 <= p < |t| ==> exists k :: 0 <= k < i && t[p] == s[k] * n
+
+    // Completeness: every processed element's scale is in t
+    invariant forall k :: 0 <= k < i ==> s[k] * n in t
+
+    // Parity preservation
+    invariant (isEvenSet(s) || isEven(n)) ==> isEvenSet(t)
+    invariant (isOddSet(s) && isOdd(n)) ==> isOddSet(t)
+
     decreases |s| - i
-    {
-      placeholder := s[i] * n;
-      t := addToSet(t, placeholder);
-      i := i + 1;
+  {
+    ghost var t0 := t;
+    ghost var i0 := i;
+
+    placeholder := s[i] * n;
+
+    // Prove parity of the element we are about to add (needed to reuse addToSet's parity ensures)
+    if isEvenSet(s) || isEven(n) {
+      if isEven(n) {
+        EvenTimes(s[i], n);
+      } else {
+        // then isEvenSet(s)
+        assert isEvenSet(s);
+        assert s[i] in s;
+        assert isEven(s[i]);
+        EvenTimes(s[i], n);
+      }
+      assert isEven(placeholder);
     }
+
+    if isOddSet(s) && isOdd(n) {
+      assert s[i] in s;
+      assert isOdd(s[i]);
+      OddTimesOdd(s[i], n);
+      assert isOdd(placeholder);
+    }
+
+    // Add scaled element (deduplicated)
+    t := addToSet(t, placeholder);
+
+    // // Useful normalization: either unchanged or appended
+    // if placeholder in t0 {
+    //   assert t == t0;
+    // } else {
+    //   assert t == t0 + [placeholder];
+    // }
+
+    i := i + 1;
+
+    // // Re-establish "completeness" for the newly processed index (k == i0)
+    // assert s[i0] * n == placeholder;
+    // assert placeholder in t; // holds in both branches above
+    // assert s[i0] * n in t;
+  }
 }
+
+// ...existing code...
 
 method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) && isSet(s2)
