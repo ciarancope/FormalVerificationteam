@@ -285,6 +285,39 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
 }
 
 /* intersects two sets s1 and s2, returning a new set t */
+// method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
+//   requires isSet(s1) && isSet(s2)
+//   ensures isSet(t)
+//   ensures forall x :: (0 <= x < |t| ==> t[x] in s1 && t[x] in s2)
+//   ensures forall x, y :: (0 <= x < |s1| && 0 <= y < |s2| && s1[x] == s2[y]) ==> s1[x] in t
+//   ensures isEvenSet(s1) ==> isEvenSet(t)
+//   ensures isOddSet(s1) ==> isOddSet(t)
+//   ensures isEvenSet(s1) && isOddSet(s2) ==> |t| == 0
+// { // TODO: fill in your code here and prove method correct
+//   // hint: you may need to call:
+//   //  NotEvenANDOdd(s1[i]);
+//   // at the appropriate place in your code to help Dafny prove correctness
+//   var i := 0;
+//   t := []; // Empty set if no overlap
+//   while i < |s1| 
+//     invariant 0 <= i <= |s1|
+//     invariant isSet(t)
+//   {
+//     var j := 0; 
+//     while j < |s2| 
+//       invariant isSet(t)
+//       invariant 0 <= j <= |s2|
+//       {
+//         if s1[i] == s2[j] {
+//           t := addToSet(t, s1[i]);
+//        }
+//        j := j + 1;
+//       }
+//     i := i + 1; 
+//   }
+// }
+
+
 method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) && isSet(s2)
   ensures isSet(t)
@@ -293,27 +326,44 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   ensures isEvenSet(s1) ==> isEvenSet(t)
   ensures isOddSet(s1) ==> isOddSet(t)
   ensures isEvenSet(s1) && isOddSet(s2) ==> |t| == 0
-{ // TODO: fill in your code here and prove method correct
-  // hint: you may need to call:
-  //  NotEvenANDOdd(s1[i]);
-  // at the appropriate place in your code to help Dafny prove correctness
+{
   var i := 0;
-  t := []; // Empty set if no overlap
-  while i < |s1| 
+  t := [];
+  while i < |s1|
     invariant 0 <= i <= |s1|
     invariant isSet(t)
+    // Soundness in the *index form* that matches the postcondition:
+    // everything currently stored in t is in (processed prefix of s1) and in s2.
+    invariant forall p :: 0 <= p < |t| ==> t[p] in s1[..i] && t[p] in s2
+    // Completeness for processed prefix: any s1[k] (k<i) that occurs in s2 is in t
+    invariant forall k, l :: 0 <= k < i && 0 <= l < |s2| && s1[k] == s2[l] ==> s1[k] in t
+    // Parity preservation
+    // invariant isEvenSet(s1) ==> (forall p :: 0 <= p < |t| ==> isEven(t[p]))
+    // invariant isOddSet(s1)  ==> (forall p :: 0 <= p < |t| ==> isOdd(t[p]))
+    // Even-set ∩ odd-set is empty
+    invariant isEvenSet(s1) && isOddSet(s2) ==> |t| == 0
+    decreases |s1| - i
   {
-    var j := 0; 
-    while j < |s2| 
-      invariant isSet(t)
+    var j := 0;
+    while j < |s2|
       invariant 0 <= j <= |s2|
-      {
-        if s1[i] == s2[j] {
-          t := addToSet(t, s1[i]);
-       }
-       j := j + 1;
+      invariant isSet(t)
+      // During inner loop we may add s1[i], so use prefix s1[..i+1]
+      invariant forall p :: 0 <= p < |t| ==> t[p] in s1[..i+1] && t[p] in s2
+      // Keep outer completeness for k<i
+      invariant forall k, l :: 0 <= k < i && 0 <= l < |s2| && s1[k] == s2[l] ==> s1[k] in t
+      // Inner progress: if s1[i] has matched among s2[0..j), then s1[i] is in t
+      invariant (exists k :: 0 <= k < j && s2[k] == s1[i]) ==> s1[i] in t
+      // Preserve disjointness claim inside inner loop too
+      invariant isEvenSet(s1) && isOddSet(s2) ==> |t| == 0
+      decreases |s2| - j
+    {
+      if s1[i] == s2[j] {
+        t := addToSet(t, s1[i]);
       }
-    i := i + 1; 
+      j := j + 1;
+    }
+    i := i + 1;
   }
 }
 
