@@ -246,23 +246,55 @@ ghost predicate isOddSet(s: seq<int>) {
   isSet(s) && forall x :: x in s ==> isOdd(x) // TODO
 }
 
+// method checkOddSet(s: seq<int>) returns (b: bool)
+//   ensures b <==> isOddSet(s)
+// { // TODO: fill in your code here and prove method correct
+
+//   b := true; // Initialise at the start
+//   var i := 0;
+//   while i < |s| 
+//       invariant 0 <= i <= |s|
+//       decreases |s| - i
+//       invariant b ==> (forall v :: 0 <= v < i ==> (s[v] % 2 != 0))
+//     {
+//       if s[i] % 2 == 0 {
+//         b := false; 
+//       } 
+//       i := i + 1;
+//     }
+//     assert i == |s|;
+// }
+
+// ...existing code...
+
 method checkOddSet(s: seq<int>) returns (b: bool)
   ensures b <==> isOddSet(s)
-{ // TODO: fill in your code here and prove method correct
-
-  b := true; // Initialise at the start
+{
+  // First, decide set-ness
+  var set_ness := checkSet(s);   // set_ness <==> isSet(s)
+  b := set_ness;
   var i := 0;
-  while i < |s| 
-      invariant 0 <= i <= |s|
-      decreases |s| - i
-      invariant b ==> (forall v :: 0 <= v < i ==> (s[v] % 2 != 0))
-    {
-      if s[i] % 2 == 0 {
-        b := false; 
-      } 
-      i := i + 1;
+  while i < |s| && b
+    invariant 0 <= i <= |s|
+    // If we are still returning true, then checkSet succeeded
+    invariant b ==> set_ness
+    // If we are still returning true, all processed elements are odd (in the isOdd sense)
+    invariant b ==> (forall k :: 0 <= k < i ==> isOdd(s[k]))
+    // If s is an odd-set, then b can never become false
+    invariant isOddSet(s) ==> b
+    decreases |s| - i
+  {
+    if s[i] % 2 == 0 {
+      // Show this branch is impossible if s is truly an odd-set
+      if isOddSet(s) {
+        assert s[i] in s;
+      }
+      b := false;
+    } else {
+      ModuloOdd(s[i]);
     }
-    assert i == |s|;
+    i := i + 1;
+  }
 }
 
 /*** Set Operations ***/
