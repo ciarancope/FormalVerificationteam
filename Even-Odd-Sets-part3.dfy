@@ -123,33 +123,71 @@ predicate isSet(s: seq<int>) {
   forall i, j :: 0 <= i < |s| && 0 <= j < |s| && s[i] == s[j] ==> i == j // TODO
 }
 
+// // hint don't use return statements. Set b instead.
+// method checkSet(s: seq<int>) returns (b: bool)
+//   // requires isSet(s)  // We had this too
+//   ensures b <==> isSet(s) //TODO
+// { // TODO: fill in your code here and prove method correct
+// b := true;                    // Assume to be true at the beginning 
+// var i := 0;                   // Outer while loop 
+// var j := 0;                   // Inner while loop
+// while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
+//     {
+//     j := i + 1;
+//     while j < |s| && b       // Stop if j reaches the end or duplicate found
+//       {
+//        if s[i] == s[j] {
+//           b := false; // Duplicate found, set b to false 
+//         }
+//         j := j + 1;
+//       }
+//     i := i + 1;
+//     }
+// }
+
+// ...existing code...
+
 // hint don't use return statements. Set b instead.
 method checkSet(s: seq<int>) returns (b: bool)
-  // requires isSet(s)  // We had this too
-  ensures b <==> isSet(s) //TODO
-{ // TODO: fill in your code here and prove method correct
-b := true;                    // Assume to be true at the beginning 
-var i := 0;                   // Outer while loop 
-while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
-    invariant 0 <= i <= |s|  // Invariant to confirm that i never exceeds the range
-    decreases |s| - i
-    invariant b ==> (forall u, v :: 0 <= u < i && 0 <= v < i && u != v ==> s[u] != s[v])
-    invariant b ==> (forall u, v :: 0 <= u < i && i <= v < |s| ==> s[u] != s[v])
-    {
+  ensures b <==> isSet(s)
+{
+  b := true;
+  var i := 0;
+
+  // If we ever discover a duplicate, we store the witnessing indices here
+  ghost var wi: int := 0;
+  ghost var wj: int := 0;
+
+  while i < |s| && b
+    invariant 0 <= i <= |s|
+    // If b is still true, then every earlier index p < i has been proven distinct
+    // from every later index q > p (i.e., all duplicates with first index < i are ruled out).
+    invariant b ==> (forall p, q :: 0 <= p < i && p < q < |s| ==> s[p] != s[q])
+    // If b is false, we have a concrete duplicate witness.
+    invariant !b ==> (0 <= wi < wj < |s| && s[wi] == s[wj])
+  {
     var j := i + 1;
-    while j < |s| && b       // Stop if j reaches the end or duplicate found
-      invariant 0 <= j <= |s|
-      decreases |s| - j
-      invariant b ==> (forall v :: i < v < j ==> s[i] != s[v])
-      {
-       if s[i] == s[j] {
-          b := false; // Duplicate found, set b to false 
-        }
-        j := j + 1;
+    while j < |s| && b
+      invariant 0 <= i < |s|
+      invariant i + 1 <= j <= |s|
+      // If b is still true, then s[i] is distinct from all elements we have checked so far in this inner loop.
+      invariant b ==> (forall k :: i < k < j ==> s[i] != s[k])
+      // Carry the outer progress fact into the inner loop.
+      invariant b ==> (forall p, q :: 0 <= p < i && p < q < |s| ==> s[p] != s[q])
+      // If b is false, we have a concrete duplicate witness.
+      invariant !b ==> (0 <= wi < wj < |s| && s[wi] == s[wj])
+    {
+      if s[i] == s[j] {
+        b := false;
+        wi := i;
+        wj := j;
       }
-    i := i + 1;
+      j := j + 1;
     }
+    i := i + 1;
+  }
 }
+
 
 /* An even set is a set where all elements are even */
 ghost predicate isEvenSet(s: seq<int>) {
