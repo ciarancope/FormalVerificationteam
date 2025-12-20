@@ -615,15 +615,6 @@ method invertParitySet(s: seq<int>) returns (t:seq<int>)
   ensures |t| == |s|
   ensures forall i :: 0 <= i < |s| ==> t[i] == invertParity(s[i])
 {
-  // Pull out isSet(s) from the disjunction
-  if isEvenSet(s) {
-    assert isSet(s);
-  } else {
-    assert isOddSet(s);
-    assert isSet(s);
-  }
-  assert isSet(s);
-
   t := [];
   var i := 0;
 
@@ -638,88 +629,19 @@ method invertParitySet(s: seq<int>) returns (t:seq<int>)
     var i0 := i;
 
     var v := invertParity(s[i0]);
-
-    // Show v is NOT already in t0, so addToSet will append and length increases
-    if v in t0 {
-      ghost var p: int :| 0 <= p < |t0| && t0[p] == v;
-
-      // bounds rewrite using |t0| == i0
-      assert |t0| == i0;
-      assert 0 <= p < i0;
-
-      // use mapping invariant on the old prefix
-      assert t0[p] == invertParity(s[p]);
-      assert v == invertParity(s[i0]);
-      assert invertParity(s[p]) == invertParity(s[i0]);
-
-      // injective: (a+1 == b+1) ==> a == b
-      assert s[p] + 1 == s[i0] + 1;
-      assert s[p] == s[i0];
-
-      // contradict isSet(s): equal values imply equal indices
-      assert isSet(s);
-      assert 0 <= p < |s| && 0 <= i0 < |s|;
-      assert p == i0;
-      assert false; // but we also have p < i0
-    }
-    assert !(v in t0);
-
     t := addToSet(t0, v);
-
-    // Since v ∉ t0, addToSet must append
-    assert t == t0 + [v];
-
     i := i0 + 1;
-
-    // Re-establish |t| == i
-    assert |t| == |t0| + 1;
-    assert |t0| == i0;
-    assert |t| == i;
-
-    // Re-establish mapping on the extended prefix
-    assert forall k :: 0 <= k < i ==> t[k] == invertParity(s[k]) by {
-      forall k | 0 <= k < i
-        ensures t[k] == invertParity(s[k])
-      {
-        if k < i0 {
-          assert t[k] == t0[k];                 // because t == t0 + [v]
-          assert t0[k] == invertParity(s[k]);    // old invariant
-        } else {
-          assert k == i0;
-          assert t[k] == v;                      // last element of append
-          assert v == invertParity(s[i0]);
-        }
-      }
-    }
   }
 
-  // Finish index/length postconditions from invariants with i == |s|
-  assert i == |s|;
-  assert |t| == |s|;
-  assert forall k :: 0 <= k < |s| ==> t[k] == invertParity(s[k]);
-
-  // Parity postconditions (proved from definitions; no reliance on InvertParityCorrect)
   if isEvenSet(s) {
     assert forall x :: x in t ==> isOdd(x) by {
       forall x | x in t
         ensures isOdd(x)
       {
-        ghost var p: int :| 0 <= p < |t| && t[p] == x;
-
-        // use mapping and even-set property
-        assert t[p] == invertParity(s[p]);
+        ghost var p: int :| 0 <= p < |t| && t[p] == x;      
         assert s[p] in s;
-        assert forall y :: y in s ==> isEven(y);
-        assert isEven(s[p]);
-
-        ghost var m: int :| s[p] == 2 * m;
-        assert x == t[p];
-        assert x == s[p] + 1;
-        assert x == 2 * m + 1;
-        assert isOdd(x);
       }
     }
-    assert isOddSet(t);
   }
 
   if isOddSet(s) {
@@ -728,20 +650,11 @@ method invertParitySet(s: seq<int>) returns (t:seq<int>)
         ensures isEven(x)
       {
         ghost var p: int :| 0 <= p < |t| && t[p] == x;
-
-        assert t[p] == invertParity(s[p]);
         assert s[p] in s;
-        assert forall y :: y in s ==> isOdd(y);
-        assert isOdd(s[p]);
-
         ghost var m: int :| s[p] == 2 * m + 1;
-        assert x == t[p];
-        assert x == s[p] + 1;
         assert x == 2 * (m + 1);
-        assert isEven(x);
       }
     }
-    assert isEvenSet(t);
   }
 }
 
