@@ -191,21 +191,54 @@ ghost predicate isEvenSet(s: seq<int>) {
  isSet(s) && forall x :: x in s ==> isEven(x) // TODO
 }
 
-method checkEvenSet(s: seq<int>) returns (b: bool)
-  //  requires isSet(s) 
+// method checkEvenSet(s: seq<int>) returns (b: bool)
+//   //  requires isSet(s) 
 
+//   ensures b <==> isEvenSet(s)
+// { // TODO: fill in your code here and prove method correct 
+//   b := true; // Initialise at the start
+//   var i := 0;
+//   while i < |s| 
+//     {
+//       if s[i] % 2 != 0 {
+//         b := false; 
+//       } 
+//       i := i + 1;
+//     }
+// }
+
+// ...existing code...
+
+method checkEvenSet(s: seq<int>) returns (b: bool)
   ensures b <==> isEvenSet(s)
-{ // TODO: fill in your code here and prove method correct 
-  b := true; // Initialise at the start
+{
+  // First, decide set-ness
+  var set_ness := checkSet(s);          // bs <==> isSet(s)
+  b := set_ness;
   var i := 0;
-  while i < |s| 
-    {
-      if s[i] % 2 != 0 {
-        b := false; 
-      } 
-      i := i + 1;
+  while i < |s| && b
+    invariant 0 <= i <= |s|
+    // If we are still returning true, then checkSet succeeded
+    invariant b ==> set_ness
+    // If we are still returning true, all processed elements are even (in the isEven sense)
+    invariant b ==> (forall k :: 0 <= k < i ==> isEven(s[k]))
+    // If s is an even-set, then b can never become false
+    invariant isEvenSet(s) ==> b
+    decreases |s| - i
+  {
+    if s[i] % 2 != 0 {
+      // If s is truly an even-set, this branch is impossible
+      if isEvenSet(s) {
+        assert s[i] in s;
+      }
+      b := false;
+    } else {
+      ModuloEven(s[i]);        // s[i] % 2 == 0 ==> isEven(s[i])
     }
+    i := i + 1;
+  }
 }
+
 
 
 /* An odd set is a set where all elements are odd */
