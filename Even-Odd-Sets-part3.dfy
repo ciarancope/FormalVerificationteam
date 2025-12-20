@@ -207,8 +207,6 @@ ghost predicate isEvenSet(s: seq<int>) {
 //     }
 // }
 
-// ...existing code...
-
 method checkEvenSet(s: seq<int>) returns (b: bool)
   ensures b <==> isEvenSet(s)
 {
@@ -264,8 +262,6 @@ ghost predicate isOddSet(s: seq<int>) {
 //     }
 //     assert i == |s|;
 // }
-
-// ...existing code...
 
 method checkOddSet(s: seq<int>) returns (b: bool)
   ensures b <==> isOddSet(s)
@@ -606,72 +602,94 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
 
     // Add scaled element (deduplicated)
     t := addToSet(t, placeholder);
-
-    // // Useful normalization: either unchanged or appended
-    // if placeholder in t0 {
-    //   assert t == t0;
-    // } else {
-    //   assert t == t0 + [placeholder];
-    // }
-
     i := i + 1;
-
-    // // Re-establish "completeness" for the newly processed index (k == i0)
-    // assert s[i0] * n == placeholder;
-    // assert placeholder in t; // holds in both branches above
-    // assert s[i0] * n in t;
   }
 }
 
-/* multiplies each element of a set s by n, returning a new set t */
+// /* multiplies each element of a set s by n, returning a new set t = { n * m | n in s1, m in s2 } */
+// method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
+//   requires isSet(s1) && isSet(s2)
+//   ensures isSet(t)
+//   ensures forall x :: x in t ==> exists i1, j1 :: 0 <= i1 < |s1| && 0 <= j1 < |s2| && x == s1[i1] * s2[j1]
+//   ensures forall i1, j1 :: i1 in s1 && j1 in s2 ==> i1 * j1 in t
+//   ensures isEvenSet(s1) || isEvenSet(s2) ==> isEvenSet(t)
+//   ensures isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
+// { // TODO: fill in your code here and prove method correct
+//   var i := 0; 
+//   var j := 0;
+//   t := []; 
+//   while i < |s1| 
+//     invariant 0 <= i <= |s1|
+//     decreases |s1| - i 
+//     decreases |s2| - i 
+//     {
+//       while j < |s2| {
+//         var placeholder := s1[i] * s2[j];
+//         t := addToSet(t, placeholder);
+//         j := j + 1;
+//       }
+//       i := i + 1;
+//     }
+// }
+
+/* multiplies each element of a set s by n, returning a new set t = { n * m | n in s1, m in s2 } */
 method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   requires isSet(s1) && isSet(s2)
   ensures isSet(t)
-  ensures forall x :: x in t ==> exists i1, j1 :: 0<= i1 < |s1| && 0<= j1 < |s2| && x == s1[i1] * s2[j1]
+  ensures forall x :: x in t ==> exists i1, j1 :: 0 <= i1 < |s1| && 0 <= j1 < |s2| && x == s1[i1] * s2[j1]
   ensures forall i1, j1 :: i1 in s1 && j1 in s2 ==> i1 * j1 in t
   ensures isEvenSet(s1) || isEvenSet(s2) ==> isEvenSet(t)
   ensures isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
-{ // TODO: fill in your code here and prove method correct
-var i := 0; 
-  var j := 0;
-  t := []; 
-  while i < |s1| 
+{
+  var i := 0;
+  t := [];
+
+  while i < |s1|
     invariant 0 <= i <= |s1|
-    decreases |s1| - i 
-    decreases |s2| - i 
+    invariant isSet(t)
+    // Soundness for processed prefix
+    invariant forall x :: x in t ==> exists i1, j1 :: 0 <= i1 < |s1| && 0 <= j1 < |s2| && x == s1[i1] * s2[j1]
+    // Completeness for processed rows of s1
+    invariant forall i1, j1 :: 0 <= i1 < i && 0 <= j1 < |s2| ==> s1[i1] * s2[j1] in t
+    // Parity preservation during construction
+    invariant isEvenSet(s1) || isEvenSet(s2) ==> isEvenSet(t)
+    invariant isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
+    decreases |s1| - i
+  {
+    var j := 0;
+    while j < |s2|
+      invariant 0 <= j <= |s2|
+      invariant isSet(t)
+      // Carry soundness forward
+      invariant forall x :: x in t ==> exists i1, j1 :: 0 <= i1 < |s1| && 0 <= j1 < |s2| && x == s1[i1] * s2[j1]
+      // All rows before i are complete, and the current row is complete up to j
+      invariant forall i1, j1 :: 0 <= i1 < i && 0 <= j1 < |s2| ==> s1[i1] * s2[j1] in t
+      invariant forall j1 :: 0 <= j1 < j ==> s1[i] * s2[j1] in t
+      // Parity preservation inside the inner loop
+      invariant isEvenSet(s1) || isEvenSet(s2) ==> isEvenSet(t)
+      invariant isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
+      decreases |s2| - j
     {
-      while j < |s2| {
-        var placeholder := s1[i] * s2[j];
-        t := addToSet(t, placeholder);
-        j := j + 1;
+      var prod := s1[i] * s2[j];
+      // Establish parity of the product before adding it
+      if isEvenSet(s1) {
+        assert isEven(s1[i]);
+        EvenTimes(s1[i], s2[j]);
+      } else if isEvenSet(s2) {
+        assert isEven(s2[j]);
+        EvenTimes(s1[i], s2[j]);
       }
-      i := i + 1;
+      if isOddSet(s1) && isOddSet(s2) {
+        // assert isOdd(s1[i]);
+        // assert isOdd(s2[j]);
+        OddTimesOdd(s1[i], s2[j]);
+      }
+      t := addToSet(t, prod);
+      j := j + 1;
     }
+    i := i + 1;
+  }
 }
-
-
-
-// /* converts an even set to an odd set by inverting the parity of each element  */
-// method invertParitySet(s: seq<int>) returns (t:seq<int>)
-//   requires isEvenSet(s) || isOddSet(s)
-//   ensures isEvenSet(s) ==> isOddSet(t)
-//   ensures isOddSet(s) ==> isEvenSet(t)
-//   ensures |t| == |s|
-//   ensures forall i :: 0 <= i < |s| ==> t[i] == invertParity(s[i])
-// { // TODO: fill in your code here and prove method correct
-//   // hint: you may need to call:
-//   //  InvertParityCorrect(s[i]);
-//   // at the appropriate place in your code to help Dafny prove correctness
-//   t := [];
-//   var i := 0;
-//   while i < |s| 
-//     invariant 0 <= i <= |s|
-//     decreases |s| - i
-//     {
-//       t := addToSet(t, invertParity(s[i]));
-//       i := i + 1; 
-//     }
-// }
 
 method invertParitySet(s: seq<int>) returns (t:seq<int>)
   requires isEvenSet(s) || isOddSet(s)
