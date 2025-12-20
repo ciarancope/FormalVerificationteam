@@ -1,4 +1,3 @@
-
 /*** Even ***/
 
  ghost predicate isEven(n: int) {
@@ -145,8 +144,6 @@ predicate isSet(s: seq<int>) {
 //     }
 // }
 
-// ...existing code...
-
 // hint don't use return statements. Set b instead.
 method checkSet(s: seq<int>) returns (b: bool)
   ensures b <==> isSet(s)
@@ -202,17 +199,14 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
   b := true; // Initialise at the start
   var i := 0;
   while i < |s| 
-      invariant 0 <= i <= |s|
-      decreases |s| - i
-      invariant b ==> (forall v :: 0 <= v < i ==> (s[v] % 2 == 0))
     {
       if s[i] % 2 != 0 {
         b := false; 
       } 
       i := i + 1;
     }
-    assert i == |s|;
 }
+
 
 /* An odd set is a set where all elements are odd */
 ghost predicate isOddSet(s: seq<int>) {
@@ -269,17 +263,25 @@ method union(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   ensures forall x :: (0 <= x < |s2| ==> s2[x] in t)
   ensures isEvenSet(s1) && isEvenSet(s2) ==> isEvenSet(t)
   ensures isOddSet(s1) && isOddSet(s2) ==> isOddSet(t)
-{ // TODO: fill in your code here and prove method correct
-  var i := 0; 
-  // var counter := 0; 
-  t := s1;  // Initialise t to be equal the first set 
-  while i < |s2| 
-    {
-      if s2[i] !in t {
-        t := addToSet(t, s2[i]);
-      }
-      i := i + 1;
+{
+  var i := 0;
+  t := s1;
+
+  while i < |s2|
+    invariant 0 <= i <= |s2|
+    invariant isSet(t)
+    // keep all of s1
+    invariant forall x :: 0 <= x < |s1| ==> s1[x] in t
+    // all processed elements of s2 are in t
+    invariant forall k :: 0 <= k < i ==> s2[k] in t
+    // t contains nothing except elements from s1 or s2
+    invariant forall x :: x in t ==> x in s1 || x in s2
+  {
+    if s2[i] !in t {
+      t := addToSet(t, s2[i]);
     }
+    i := i + 1;
+  }
 }
 
 /* intersects two sets s1 and s2, returning a new set t */
