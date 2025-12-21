@@ -149,16 +149,9 @@ method checkSet(s: seq<int>) returns (b: bool)
 b := true;                    // Assume to be true at the beginning 
 var i := 0;                   // Outer while loop 
 while i < |s| && b                // While loop to sort through set, stop if i reaches the end or duplicate found
-    invariant 0 <= i <= |s|  // Invariant to confirm that i never exceeds the range
-    decreases |s| - i
-    invariant b ==> (forall u, v :: 0 <= u < i && 0 <= v < i && u != v ==> s[u] != s[v])
-    invariant b ==> (forall u, v :: 0 <= u < i && i <= v < |s| ==> s[u] != s[v])
     {
     var j := i + 1;
     while j < |s| && b       // Stop if j reaches the end or duplicate found
-      invariant 0 <= j <= |s|
-      decreases |s| - j
-      invariant b ==> (forall v :: i < v < j ==> s[i] != s[v])
       {
        if s[i] == s[j] {
           b := false; // Duplicate found, set b to false 
@@ -182,16 +175,12 @@ method checkEvenSet(s: seq<int>) returns (b: bool)
   b := true; // Initialise at the start
   var i := 0;
   while i < |s| 
-      invariant 0 <= i <= |s|
-      decreases |s| - i
-      invariant b ==> (forall v :: 0 <= v < i ==> (s[v] % 2 == 0))
     {
       if s[i] % 2 != 0 {
         b := false; 
       } 
       i := i + 1;
     }
-    assert i == |s|;
 }
 
 /* An odd set is a set where all elements are odd */
@@ -339,10 +328,7 @@ method setScale(s: seq<int>, n: int) returns (t: seq<int>)
     }
 }
 
-/* Computes the product set of two sets s1 and s2, returning a new set t = { n * m | n in s1, m in s2 }  */
 method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
-// TODO: Specify the behavior of this method so that your specification characterizes the allowed outputs,
-// and as many relevant properties of the result as you can.
   requires |s1| == |s2| 
   requires isSet(s1) 
   requires isSet(s2)
@@ -352,9 +338,6 @@ method setProduct(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
   var j := 0;
   t := []; 
   while i < |s1| 
-    invariant 0 <= i <= |s1|
-    decreases |s1| - i 
-    decreases |s2| - i 
     {
       while j < |s2| {
         var placeholder := s1[i] * s2[j];
