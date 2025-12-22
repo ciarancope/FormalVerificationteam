@@ -1,3 +1,6 @@
+// Keith Begley 10261631
+// Ciarán Cope  21363716
+
 /*** Even ***/
 
  ghost predicate isEven(n: int) {
@@ -309,9 +312,6 @@ method intersection(s1: seq<int>, s2: seq<int>) returns (t: seq<int>)
     invariant forall p :: 0 <= p < |t| ==> t[p] in s1[..i] && t[p] in s2
     // Completeness for processed prefix: any s1[k] (k<i) that occurs in s2 is in t
     invariant forall k, l :: 0 <= k < i && 0 <= l < |s2| && s1[k] == s2[l] ==> s1[k] in t
-    // Parity preservation
-    // invariant isEvenSet(s1) ==> (forall p :: 0 <= p < |t| ==> isEven(t[p]))
-    // invariant isOddSet(s1)  ==> (forall p :: 0 <= p < |t| ==> isOdd(t[p]))
     // Even-set ∩ odd-set is empty
     invariant isEvenSet(s1) && isOddSet(s2) ==> |t| == 0
     decreases |s1| - i
